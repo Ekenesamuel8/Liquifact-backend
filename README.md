@@ -52,13 +52,35 @@ Default port: **3001**. After starting:
 
 ---
 
+## API Pagination
+
+The `GET /api/invoices` endpoint supports pagination via query parameters:
+
+- `page`: The page number (default: 1).
+- `limit`: Number of records per page (default: 10, max: 100).
+
+Response metadata includes:
+- `total`: Total records in the system.
+- `page`: Current page.
+- `limit`: Current limit.
+- `totalPages`: Total number of pages based on the limit.
+- `hasNextPage`: Boolean indicating if a next page exists.
+- `hasPreviousPage`: Boolean indicating if a previous page exists.
+
+---
+
 ## Project structure
 
 ```
 liquifact-backend/
 ├── src/
-│   └── index.js    # Express app, routes (health, invoices, escrow)
-├── .env.example   # Env template (PORT, Stellar, DB placeholders)
+│   ├── app.js               # Express application and routes
+│   ├── index.js             # Server entry point
+│   ├── services/
+│   │   └── invoiceService.js # Business logic and pagination
+│   └── tests/
+│       └── pagination.test.js # Integration and unit tests
+├── .env.example
 ├── eslint.config.js
 └── package.json
 ```
