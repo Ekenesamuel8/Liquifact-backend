@@ -2,7 +2,12 @@ const AppError = require('../errors/AppError');
 const formatProblemDetails = require('../utils/problemDetails');
 
 /**
- * Global Error Handling Middleware for RFC 7807 compliant error responses.
+ * Global error handling middleware
+ * Ensures consistent error responses and prevents stack leaks in production.
+ * @param err
+ * @param req
+ * @param res
+ * @param _next
  */
 function errorHandler(err, req, res, _next) {
   let problem;

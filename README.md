@@ -56,14 +56,14 @@ Content-Type: application/problem+json
 
 ## Development
 
-| Command               | Description                             |
-|-----------------------|-----------------------------------------|
-| `npm run dev`         | Start API with watch mode               |
-| `npm run start`       | Start API (production-style)           |
-| `npm run lint`        | Run ESLint on `src/`                   |
-| `npm run lint:fix`    | Auto-fix linting issues                |
-| `npm test`            | Run unit tests (Vitest)                |
-| `npm run test:coverage`| Run tests with coverage report         |
+| Command                | Description                             |
+|------------------------|-----------------------------------------|
+| `npm run dev`          | Start API with watch mode               |
+| `npm run start`        | Start API (production-style)            |
+| `npm run lint`         | Run ESLint on `src/`                    |
+| `npm run lint:fix`     | Auto-fix linting issues                 |
+| `npm test`             | Run unit tests                          |
+| `npm run test:coverage`| Run tests with coverage report          |
 
 Default port: **3001**. After starting:
 
@@ -87,7 +87,7 @@ We enforce strict linting rules using `eslint:recommended` and `eslint-plugin-se
 - **CI Enforcement**: The CI pipeline will fail if linting errors are present or if test coverage falls below **95%**.
 
 ### Testing
-We use **Vitest** and **Supertest** for testing.
+We use **Jest** and **Supertest** for testing.
 - Run tests: `npm test`
 - Check coverage: `npm run test:coverage`
 
@@ -129,7 +129,7 @@ The API enforces an environment-driven CORS allowlist for browser-originated req
   `CORS_ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com`
 
 Behavior:
-- Requests without an `Origin` header are allowed, as it can be curl, postman, etc. 
+- Requests without an `Origin` header are allowed, as it can be curl, postman, etc.
 - Requests from allowed origins receive normal CORS headers.
 - Requests from disallowed origins are rejected with `403 Forbidden`.
 - Origin matching is exact only. Wildcards and regex patterns are not supported.
@@ -142,29 +142,94 @@ Production default:
 
 ---
 
+## API Response Structure
+
+All endpoints return a standardized JSON envelope:
+
+```json
+{
+  "data": { ... },
+  "meta": {
+    "timestamp": "2026-03-24T09:55:00.000Z",
+    "version": "0.1.0"
+  },
+  "error": null
+}
+```
+
+In case of an error:
+
+```json
+{
+  "data": null,
+  "meta": { ... },
+  "error": {
+    "message": "Human readable message",
+    "code": "ERROR_CODE",
+    "details": { ... }
+  }
+}
+```
+
+---
+
 ## Project structure
 
 ```
 liquifact-backend/
 ├── src/
-│   ├── config/
+│   ├── app.js               # Express application setup
+│   ├── index.js             # Server entry point
+│   ├── utils/
+│   │   └── responseHelper.js # Standardized response logic
+│   └── tests/
+│       └── response.test.js # Coverage-backed integration tests
+├── .env.example
 │   │   └── cors.js     # CORS allowlist parsing and policy
+│   │   └── cors.js       # CORS allowlist parsing and policy
+│   ├── middleware/
+│   │   └── security.js   # Helmet security header configuration
 │   ├── services/
-│   │   └── soroban.js  # Contract interaction wrappers
+│   │   └── soroban.js    # Contract interaction wrappers
 │   ├── utils/
 │   │   └── retry.js    # Exponential backoff utility
 │   ├── app.js          # Express app, middleware, routes
 │   └── index.js        # Runtime bootstrap
 ├── .env.example        # Env template
+│   │   └── retry.js      # Exponential backoff utility
+│   ├── index.js          # Express app, routes, error handler (importable for tests)
+│   ├── index.test.js     # Integration + security header tests (Jest + supertest)
+│   └── server.js         # Server entry point — binds app to PORT
+├── .env.example          # Env template (PORT, Stellar, DB placeholders)
 ├── eslint.config.js
 └── package.json
 ```
 
 ---
 
+## Security
+
+HTTP response headers are hardened via [Helmet](https://helmetjs.github.io/) (`src/middleware/security.js`). Applied headers include:
+
+| Header | Value / Policy |
+|--------|----------------|
+| `Content-Security-Policy` | Restricts all resource loading to `'self'`; blocks objects and frames |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` |
+| `X-Frame-Options` | `DENY` — prevents clickjacking |
+| `X-Content-Type-Options` | `nosniff` — disables MIME sniffing |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+| `Cross-Origin-Embedder-Policy` | `require-corp` |
+| `X-DNS-Prefetch-Control` | `off` |
+| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `X-Powered-By` | Removed (technology fingerprinting prevention) |
+
+---
+
 ## Resiliency & Retries
 
-To ensure reliable communication with Soroban contract provider APIs, this backend implements a robust **Retry and Backoff** mechanism (`src/utils/retry.js`). 
+To ensure reliable communication with Soroban contract provider APIs, this backend implements a robust **Retry and Backoff** mechanism (`src/utils/retry.js`).
 
 ### Key Features
 - **Exponential Backoff (`withRetry`)**: Automatically retries transient errors (e.g., HTTP 429, 502, 503, 504, network timeouts).
@@ -182,7 +247,7 @@ To ensure reliable communication with Soroban contract provider APIs, this backe
 GitHub Actions runs on every push and pull request to `main`:
 
 - **Lint** — `npm run lint`
-- **Tests** — `npm test`
+- **Tests** — `npm run test:coverage`
 - **Build check** — `node --check src/index.js` (syntax)
 
 Ensure your branch passes these before opening a PR.
