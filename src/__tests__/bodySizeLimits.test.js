@@ -64,8 +64,9 @@ function buildApp(middlewares) {
 
 /**
  * Generates a JSON body string of approximately `targetBytes` bytes.
- * @param {number} targetBytes - Approximate target size in bytes.
- * @returns {string} JSON string body.
+ *
+ * @param {number} targetBytes - Approximate size of the resulting JSON string in bytes.
+ * @returns {string} JSON string payload.
  */
 function makeJsonBody(targetBytes) {
   const paddingLen = Math.max(0, targetBytes - 11);
@@ -74,8 +75,9 @@ function makeJsonBody(targetBytes) {
 
 /**
  * Generates a URL-encoded body string of approximately `targetBytes` bytes.
- * @param {number} targetBytes - Approximate target size in bytes.
- * @returns {string} URL-encoded string body.
+ *
+ * @param {number} targetBytes - Approximate size of the resulting urlencoded string in bytes.
+ * @returns {string} URL-encoded payload.
  */
 function makeUrlencodedBody(targetBytes) {
   return `data=${'x'.repeat(Math.max(0, targetBytes - 5))}`;
@@ -438,7 +440,6 @@ describe('computeBackoff()', () => {
     expect(computeBackoff(0, 200, 5000)).toBeGreaterThanOrEqual(0);
   });
   it('increases with attempt number', () => {
-    computeBackoff(0, 200, 5000);
     const d3 = computeBackoff(3, 200, 5000);
     // With jitter d3 is almost certainly larger; we check average tendency
     expect(200 * 2 ** 3).toBeGreaterThan(200); // sanity

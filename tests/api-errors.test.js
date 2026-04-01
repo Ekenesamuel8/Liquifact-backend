@@ -116,15 +116,15 @@ test('missing auth returns structured AUTHENTICATION_REQUIRED response', async (
     code: 'AUTHENTICATION_REQUIRED',
     message: 'Authentication is required for this endpoint.',
     retryable: false,
-    retryHint: 'Provide a valid Bearer token and try again.',
+    retryHint: 'Provide valid credentials and try again.',
   });
 });
 
 test('authenticated test route keeps success responses intact', async () => {
-  const app = createApp({ enableTestRoutes: true, securityToken: 'test-suite-token' });
+  const app = createApp({ enableTestRoutes: true });
   const response = await request(app)
     .get('/__test__/auth')
-    .set('Authorization', 'Bearer test-suite-token');
+    .set('Authorization', 'Bearer token');
 
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, { ok: true });
